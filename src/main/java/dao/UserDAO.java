@@ -1,6 +1,7 @@
 package dao;
 
 import java.security.MessageDigest;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,8 +29,7 @@ public class UserDAO extends DBContext {
 
     public boolean registerUser(Users user) {
         String sql = "INSERT INTO Users (RollNumber, Password, FullName, PhoneNumber, Address, Email, RoleID) VALUES (?, ?, ?, ?, ?, ?, 1)";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getRollNumber());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getFullname());
@@ -40,7 +40,7 @@ public class UserDAO extends DBContext {
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
                 String sqlNotification = "INSERT INTO NotificationSettings (RollNumber, NotificationInterval) VALUES (?, '24')";
-                try (PreparedStatement psNotification = conn.prepareStatement(sqlNotification)) {
+                try ( PreparedStatement psNotification = conn.prepareStatement(sqlNotification)) {
                     psNotification.setString(1, user.getRollNumber());
                     psNotification.executeUpdate();
                 }
@@ -54,13 +54,12 @@ public class UserDAO extends DBContext {
 
     public Users verifyMD5(String rollNumber, String password) {
         String sql = "SELECT * FROM Users WHERE RollNumber = ? AND Password = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, rollNumber);
             String hashedPassword = hashMD5(password);
             System.out.println("Verifying rollNumber: " + rollNumber + ", hashedPassword: " + hashedPassword);
             ps.setString(2, hashedPassword);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new Users(
                             rs.getInt("UserID"),
@@ -85,9 +84,9 @@ public class UserDAO extends DBContext {
 
     public boolean isFullNameExists(String fullName) {
         String sql = "SELECT COUNT(*) FROM Users WHERE fullName = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try ( PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, fullName);
-            try (ResultSet rs = stmt.executeQuery()) {
+            try ( ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
@@ -101,10 +100,9 @@ public class UserDAO extends DBContext {
 
     public boolean isEmailExists(String email) {
         String sql = "SELECT COUNT(*) FROM Users WHERE email = ?";
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try ( PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
-            try (ResultSet rs = stmt.executeQuery()) {
+            try ( ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
@@ -118,10 +116,9 @@ public class UserDAO extends DBContext {
 
     public boolean changePassword(String rollNumber, String currentPassword, String newPassword) {
         String sqlCheck = "SELECT Password FROM Users WHERE RollNumber = ?";
-        try {
-            PreparedStatement psCheck = conn.prepareStatement(sqlCheck);
+        try ( PreparedStatement psCheck = conn.prepareStatement(sqlCheck)) {
             psCheck.setString(1, rollNumber);
-            try (ResultSet rs = psCheck.executeQuery()) {
+            try ( ResultSet rs = psCheck.executeQuery()) {
                 if (rs.next()) {
                     String storedPassword = rs.getString("Password");
                     String hashedCurrentPassword = hashMD5(currentPassword);
@@ -143,8 +140,7 @@ public class UserDAO extends DBContext {
         }
 
         String sqlUpdate = "UPDATE Users SET Password = ? WHERE RollNumber = ?";
-        try {
-            PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
+        try ( PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
             String hashedNewPassword = hashMD5(newPassword);
             psUpdate.setString(1, hashedNewPassword);
             psUpdate.setString(2, rollNumber);
@@ -162,8 +158,7 @@ public class UserDAO extends DBContext {
     // Phương thức cho cài đặt chung
     public int getDefaultLoanDays() {
         String sql = "SELECT DefaultLoanDays FROM LoanSettings";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt("DefaultLoanDays");
             }
@@ -171,14 +166,14 @@ public class UserDAO extends DBContext {
             System.out.println("getDefaultLoanDays error: " + e.getMessage());
             e.printStackTrace();
         }
-        return 14;
+        return 0;
     }
 
     public int getLateDays(String rollNumber) {
         String sql = "SELECT SUM(DATEDIFF(day, DueDate, GETDATE())) as LateDays FROM Transactions WHERE RollNumber = ? AND DueDate < GETDATE() AND ReturnDate IS NULL";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, rollNumber);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("LateDays");
                 }
@@ -190,12 +185,24 @@ public class UserDAO extends DBContext {
         return 0;
     }
 
+    public int getLateFeePerDay() {
+        String sql = "SELECT LateFeePerDay FROM LoanSettings";
+        try ( PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("LateFeePerDay");
+            }
+        } catch (SQLException e) {
+            System.out.println("getLateFeePerDay error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return 15000;
+    }
+
     public int getBookCount(String rollNumber) {
         String sql = "SELECT COUNT(*) as BookCount FROM Transactions WHERE RollNumber = ? AND ReturnDate IS NULL";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, rollNumber);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("BookCount");
                 }
@@ -209,8 +216,7 @@ public class UserDAO extends DBContext {
 
     public int getMaxBooksAllowed() {
         String sql = "SELECT MaxBooksAllowed FROM LoanSettings";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt("MaxBooksAllowed");
             }
@@ -221,25 +227,11 @@ public class UserDAO extends DBContext {
         return 10;
     }
 
-    public int getLateFeePerDay() {
-        String sql = "SELECT LateFeePerDay FROM LoanSettings";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt("LateFeePerDay");
-            }
-        } catch (SQLException e) {
-            System.out.println("getLateFeePerDay error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return 15000;
-    }
-
     public String getNotificationInterval(String rollNumber) {
         String sql = "SELECT NotificationInterval FROM NotificationSettings WHERE RollNumber = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, rollNumber);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getString("NotificationInterval");
                 }
@@ -253,13 +245,13 @@ public class UserDAO extends DBContext {
 
     public boolean updateNotificationInterval(String rollNumber, String interval) {
         String sql = "UPDATE NotificationSettings SET NotificationInterval = ? WHERE RollNumber = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, interval);
             ps.setString(2, rollNumber);
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected == 0) {
                 String sqlInsert = "INSERT INTO NotificationSettings (RollNumber, NotificationInterval) VALUES (?, ?)";
-                try (PreparedStatement psInsert = conn.prepareStatement(sqlInsert)) {
+                try ( PreparedStatement psInsert = conn.prepareStatement(sqlInsert)) {
                     psInsert.setString(1, rollNumber);
                     psInsert.setString(2, interval);
                     return psInsert.executeUpdate() > 0;
@@ -275,7 +267,7 @@ public class UserDAO extends DBContext {
 
     public boolean extendLoan(String rollNumber, int transactionId, int days, String reason) {
         String sql = "UPDATE Transactions SET ExtendedDays = ExtendedDays + ?, ExtensionReason = ? WHERE TransactionID = ? AND RollNumber = ? AND ReturnDate IS NULL";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, days);
             ps.setString(2, reason);
             ps.setInt(3, transactionId);
@@ -290,17 +282,40 @@ public class UserDAO extends DBContext {
     }
 
     // Phương thức mới để hỗ trợ ExtendLoanServlet
-    public boolean extendLoanDays(String rollNumber, int extendDays) {
+    public boolean extendLoanDays(String rollNumber, int extendDays) throws SQLException {
         String sql = "UPDATE Transactions SET DueDate = DATEADD(day, ?, DueDate) WHERE RollNumber = ? AND ReturnDate IS NULL";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, extendDays);
             ps.setString(2, rollNumber);
             int rowsAffected = ps.executeUpdate();
+            System.out.println("Rows affected in extendLoanDays: " + rowsAffected);
+            if (rowsAffected == 0) {
+                String checkSql = "SELECT COUNT(*) FROM Transactions WHERE RollNumber = ? AND ReturnDate IS NULL";
+                try ( PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                    checkPs.setString(1, rollNumber);
+                    ResultSet rs = checkPs.executeQuery();
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        System.out.println("No active transactions found for rollNumber: " + rollNumber);
+                    }
+                }
+            }
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("extendLoanDays error: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            throw e;
+        }
+    }
+    
+    public Date getLatestDueDate(String rollNumber) throws SQLException {
+        String sql = "SELECT TOP 1 DueDate FROM Transactions WHERE RollNumber = ? AND ReturnDate IS NULL ORDER BY DueDate DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, rollNumber);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getDate("DueDate");
+            }
+            return null;
         }
     }
 }

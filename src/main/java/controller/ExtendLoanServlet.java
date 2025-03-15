@@ -13,6 +13,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -69,33 +72,38 @@ public class ExtendLoanServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        response.setContentType("text/plain"); // Đảm bảo phản hồi là plain text
-
-        String rollNumber = request.getParameter("rollNumber");
-        String extendDaysStr = request.getParameter("extendDays"); // Khớp với tên tham số từ JSP
-
-        // Kiểm tra dữ liệu đầu vào
-        if (rollNumber == null || extendDaysStr == null) {
-            response.getWriter().write("error: Missing parameters");
-            return;
-        }
-
-        int extendDays;
         try {
-            extendDays = Integer.parseInt(extendDaysStr);
-        } catch (NumberFormatException e) {
-            response.getWriter().write("error: Invalid days format");
-            return;
-        }
-
-        UserDAO userDAO = new UserDAO();
-        // Gọi hàm extendLoanDays (giả định đã có trong UserDAO) thay vì extendLoan
-        boolean success = userDAO.extendLoanDays(rollNumber, extendDays);
-
-        if (success) {
-            response.getWriter().write("success");
-        } else {
-            response.getWriter().write("error: Failed to extend loan");
+            response.setContentType("text/plain"); // Đảm bảo phản hồi là plain text
+            
+            String rollNumber = request.getParameter("rollNumber");
+            String extendDaysStr = request.getParameter("extendDays"); // Khớp với tên tham số từ JSP
+            
+            // Kiểm tra dữ liệu đầu vào
+            if (rollNumber == null || extendDaysStr == null) {
+                response.getWriter().write("error: Missing parameters");
+                return;
+            }
+            
+            int extendDays;
+            try {
+                extendDays = Integer.parseInt(extendDaysStr);
+            } catch (NumberFormatException e) {
+                response.getWriter().write("error: Invalid days format");
+                return;
+            }
+            
+            UserDAO userDAO = new UserDAO();
+            // Gọi hàm extendLoanDays (giả định đã có trong UserDAO) thay vì extendLoan
+            boolean success = userDAO.extendLoanDays(rollNumber, extendDays);
+            
+            if (success) {
+                response.getWriter().write("success");
+            } else {
+                response.getWriter().write("error: Failed to extend loan");
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ExtendLoanServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

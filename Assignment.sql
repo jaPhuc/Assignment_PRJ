@@ -61,7 +61,7 @@ CREATE TABLE Transactions (
     FOREIGN KEY (BookID) REFERENCES Books(BookID)
 );
 INSERT INTO Transactions (UserID, RollNumber, BookID, BorrowDate, DueDate, ReturnDate, Fine) 
-VALUES (2, 'CE190872', 1, '2025-02-28', '2025-03-10', NULL, 0.00);
+VALUES (2, 'CE190872', 1, '2025-02-28', '2025-03-15', NULL, 0.00);
 
 -- Tạo bảng TransactionHistory
 CREATE TABLE TransactionHistory (

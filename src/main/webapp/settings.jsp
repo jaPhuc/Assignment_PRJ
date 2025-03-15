@@ -296,10 +296,7 @@
                 display: none;
             }
             .modal-content .slide.active {
-                display: block !important;
-                visibility: visible;
-                opacity: 1;
-                transition: opacity 0.3s ease;
+                display: block;
             }
             .modal-content .note {
                 font-size: 0.9rem;
@@ -335,14 +332,6 @@
                 background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%);
                 transform: translateY(-1px);
                 box-shadow: 0 4px 10px rgba(26, 115, 232, 0.4);
-            }
-
-            #paymentAmount {
-                color: #e0e0e0; /* Đảm bảo màu chữ hiển thị trên nền tối */
-                font-size: 1rem;
-                font-weight: 500;
-                visibility: visible;
-                opacity: 1;
             }
 
             /* Hiệu ứng nháy đỏ - Giữ nguyên */
@@ -409,9 +398,9 @@
                 <!-- Menu bên trái - Giữ nguyên -->
                 <div class="settings-menu">
                     <ul class="settings-list">
-                        <li><div class="settings-item active" data-target="account-info">Account</div></li>
-                        <li><div class="settings-item" data-target="change-password">Change Password</div></li>
-                        <li><div class="settings-item" data-target="general-settings">General Setting</div></li>
+                        <li><div class="settings-item active" data-target="account-info">Tài khoản</div></li>
+                        <li><div class="settings-item" data-target="change-password">Thay đổi mật khẩu</div></li>
+                        <li><div class="settings-item" data-target="general-settings">Cài đặt chung</div></li>
                     </ul>
                 </div>
 
@@ -475,7 +464,22 @@
                         <%
                             UserDAO userDAO = new UserDAO();
                             String rollNumber = session.getAttribute("user") != null ? ((Users) session.getAttribute("user")).getRollNumber() : "";
-                            int defaultLoanDays = userDAO.getDefaultLoanDays();
+                            java.sql.Date dueDate = userDAO.getLatestDueDate(rollNumber);
+                            String dueDaysDisplay;
+                            int dueDays = 0;
+                            boolean isOverdue = false;
+                            if (dueDate != null) {
+                                java.time.LocalDate dueLocalDate = dueDate.toLocalDate();
+                                java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.systemDefault());
+                                dueDays = (int) java.time.temporal.ChronoUnit.DAYS.between(today, dueLocalDate);
+                                isOverdue = dueDays < 0;
+                                dueDays = Math.max(0, dueDays);
+                                dueDaysDisplay = dueDays + " ngày" + (isOverdue ? " (Đã trễ hạn)" : "");
+                                System.out.println("DueDate: " + dueDate + ", DueDays: " + dueDays + ", IsOverdue: " + isOverdue);
+                            } else {
+                                dueDaysDisplay = "Chưa mượn sách";
+                                System.out.println("No DueDate found for rollNumber " + rollNumber + ", no active transactions");
+                            }
                             int lateDays = userDAO.getLateDays(rollNumber);
                             int bookCount = userDAO.getBookCount(rollNumber);
                             int maxBooksAllowed = userDAO.getMaxBooksAllowed();
@@ -485,11 +489,11 @@
                         <h3 class="searchable">Thời gian mượn sách mặc định</h3>
                         <div class="detail-item">
                             <label class="searchable">Ngày bạn cần phải trả là:</label>
-                            <span class="searchable" id="defaultLoanDays"><%= defaultLoanDays%> ngày</span>
+                            <span class="searchable" id="defaultLoanDays"><%= dueDaysDisplay%></span>
                         </div>
                         <div class="detail-item">
                             <label class="searchable">Gia hạn thêm thời gian mượn:</label>
-                            <button onclick="showExtendModal()" class="done-btn searchable">Gia hạn</button>
+                            <button onclick="showExtendModal()" class="done-btn searchable" <%= (dueDate == null || isOverdue) ? "disabled" : ""%>>Gia hạn</button>
                         </div>
 
                         <h3 class="searchable">Phí phạt trễ hạn</h3>
@@ -566,7 +570,7 @@
                             <p class="note">Vui lòng chụp màn hình lại khi thực hiện giao dịch thành công</p>
                             <div class="button-container">
                                 <button class="back-btn" onclick="goBack()">Back</button>
-                                <button id="finishBtn" onclick="finishPayment()" disabled>Finish</button>
+                                <button id="finishBtn" onclick="finishPayment()">Finish</button>
                             </div>
                         </div>
                     </div>
@@ -590,7 +594,7 @@
                                                 const targetDetail = document.getElementById(targetId);
 
                                                 if (!targetDetail) {
-                                                    console.error(`Không tìm thấy phần tử với id: ${targetId}`);
+                                                    console.error("Không tìm thấy phần tử với id: " + targetId);
                                                     return;
                                                 }
 
@@ -604,7 +608,7 @@
                                                 this.classList.add('active');
                                                 targetDetail.classList.add('active');
 
-                                                console.log(`Đã chuyển sang mục: ${targetId}`);
+                                                console.log("Đã chuyển sang mục: " + targetId);
                                             });
                                         });
                                     });
@@ -681,7 +685,8 @@
                                             body: new URLSearchParams({
                                                 'rollNumber': '<%= session.getAttribute("user") != null ? ((Users) session.getAttribute("user")).getRollNumber() : ""%>',
                                                 'currentPassword': currentPassword,
-                                                'newPassword': newPassword
+                                                'newPassword': newPassword,
+                                                'action': 'changePassword'
                                             })
                                         })
                                                 .then(response => response.text())
@@ -717,74 +722,23 @@
                                         document.getElementById('extendDays').value = '';
                                         nextBtn.disabled = true;
                                         finishBtn.disabled = true;
-                                        setTimeout(() => {
-                                            console.log("Modal displayed, ready to proceed.");
-                                        }, 100);
                                     }
 
                                     function closeModal() {
                                         extendModal.style.display = 'none';
-                                        console.log("Closing modal");
-                                        const paymentAmount = document.getElementById('paymentAmount');
-                                        console.log("paymentAmount content after closeModal:", paymentAmount ? paymentAmount.textContent : "Not found");
                                     }
 
                                     function checkDaysInput() {
-                                        const daysInput = document.getElementById('extendDays').value.trim();
-                                        const days = parseInt(daysInput, 10);
-                                        nextBtn.disabled = !daysInput || isNaN(days) || days <= 0;
-                                        console.log("Checking days:", daysInput, "Disabled:", nextBtn.disabled);
+                                        const days = document.getElementById('extendDays').value;
+                                        nextBtn.disabled = !days || days <= 0;
                                     }
 
-                                    document.getElementById('extendDays').addEventListener('input', checkDaysInput);
-
                                     function showPaymentDetails() {
-                                        const extendDaysInput = document.getElementById('extendDays');
-                                        if (!extendDaysInput) {
-                                            console.error("extendDays input not found!");
-                                            return;
-                                        }
-
-                                        const daysInputValue = extendDaysInput.value.trim();
-                                        const days = parseInt(daysInputValue, 10);
-                                        console.log("Input value:", daysInputValue, "Parsed days:", days);
-
-                                        if (isNaN(days) || days <= 0) {
-                                            alert("Please enter a valid number of days greater than 0.");
-                                            return;
-                                        }
-
+                                        const days = parseInt(document.getElementById('extendDays').value, 10);
                                         const fee = days * 10000;
-                                        console.log("Calculated fee:", fee);
-
-                                        if (isNaN(fee)) {
-                                            console.error("Fee is NaN! Something went wrong with the calculation.");
-                                            return;
-                                        }
-
-                                        const paymentAmount = document.getElementById('paymentAmount');
-                                        if (!paymentAmount) {
-                                            console.error("paymentAmount span not found in DOM!");
-                                            return;
-                                        }
-
-                                        paymentAmount.textContent = fee.toLocaleString('vi-VN') + " VNĐ";
-                                        console.log("Set paymentAmount textContent to:", paymentAmount.textContent);
-
+                                        document.getElementById('paymentAmount').textContent = fee.toLocaleString('vi-VN') + " VNĐ";
                                         slide1.classList.remove('active');
                                         slide2.classList.add('active');
-                                        console.log("Slide 2 active:", slide2.classList.contains('active'));
-
-                                        // Kiểm tra DOM ngay sau khi chuyển slide
-                                        setTimeout(() => {
-                                            const updatedPaymentAmount = document.getElementById('paymentAmount');
-                                            console.log("DOM check after slide transition - paymentAmount content:", updatedPaymentAmount ? updatedPaymentAmount.textContent : "Not found");
-                                            if (!updatedPaymentAmount || !updatedPaymentAmount.textContent) {
-                                                console.warn("paymentAmount content was cleared after slide transition! Re-setting...");
-                                                updatedPaymentAmount.textContent = `${fee} VNĐ`;
-                                            }
-                                        }, 200);
-
                                         finishBtn.disabled = false;
                                     }
 
@@ -792,9 +746,6 @@
                                         slide2.classList.remove('active');
                                         slide1.classList.add('active');
                                         finishBtn.disabled = true;
-                                        console.log("Going back to slide 1");
-                                        const paymentAmount = document.getElementById('paymentAmount');
-                                        console.log("paymentAmount content after goBack:", paymentAmount ? paymentAmount.textContent : "Not found");
                                     }
 
                                     function finishPayment() {
@@ -820,18 +771,48 @@
                                                 .then(data => {
                                                     console.log("Response from ExtendLoanServlet:", data);
                                                     if (data === "success") {
-                                                        const defaultLoanDaysElement = document.getElementById('defaultLoanDays');
-                                                        let currentDays = parseInt(defaultLoanDaysElement.textContent, 10) || 0;
-                                                        defaultLoanDaysElement.textContent = `${currentDays + days} ngày`;
-                                                        alert("Extension successful! Please take a screenshot as proof.");
-                                                        closeModal();
+                                                        fetch('Setting', {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/x-www-form-urlencoded'
+                                                            },
+                                                            body: new URLSearchParams({
+                                                                'rollNumber': rollNumber,
+                                                                'action': 'getDueDate'
+                                                            })
+                                                        })
+                                                                .then(response => response.text())
+                                                                .then(dueDays => {
+                                                                    console.log("Due days from server:", dueDays);
+                                                                    const defaultLoanDaysElement = document.getElementById('defaultLoanDays');
+                                                                    const extendButton = document.querySelector('.done-btn[onclick="showExtendModal()"]');
+                                                                    console.log("Default loan days before update:", defaultLoanDaysElement.textContent);
+
+                                                                    const parsedDueDays = parseInt(dueDays, 10);
+                                                                    if (!isNaN(parsedDueDays)) {
+                                                                        const isOverdue = parsedDueDays < 0;
+                                                                        defaultLoanDaysElement.textContent = (isOverdue ? 0 : parsedDueDays) + " ngày" + (isOverdue ? " (Đã trễ hạn)" : "");
+                                                                        extendButton.disabled = isOverdue;
+                                                                    } else {
+                                                                        defaultLoanDaysElement.textContent = "Chưa mượn sách";
+                                                                        extendButton.disabled = true;
+                                                                    }
+
+                                                                    console.log("Default loan days after update:", defaultLoanDaysElement.textContent);
+                                                                    alert("Extension successful! Please take a screenshot as proof.");
+                                                                    closeModal();
+                                                                })
+                                                                .catch(error => {
+                                                                    console.error('Error fetching due date:', error);
+                                                                    alert("Error updating due date. Please try again.");
+                                                                });
                                                     } else {
-                                                        alert("Error extending loan. Please try again.");
+                                                        alert("Error extending loan. Please try again. Error code: " + data);
                                                     }
                                                 })
                                                 .catch(error => {
                                                     console.error('Error:', error);
-                                                    alert("Error extending loan. Please try again.");
+                                                    alert("Error extending loan. Please try again. Details: " + error.message);
                                                     closeModal();
                                                 });
                                     }
