@@ -11,8 +11,8 @@
         <style>
             /* Dark mode tổng thể */
             body {
-                background-color: #ffffff;
-                color: #000000;
+                background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+                color: #e0e0e0;
                 font-family: 'Roboto', sans-serif;
                 margin: 0;
                 padding: 20px;
@@ -28,8 +28,8 @@
             .back-arrow-btn {
                 display: flex;
                 align-items: center;
-                background: #66ff66;
-                color: #000000;
+                background: #333333;
+                color: #e0e0e0;
                 padding: 8px 12px;
                 border-radius: 20px;
                 border: 1px solid rgba(255, 255, 255, 0.1);
@@ -44,8 +44,8 @@
                 z-index: 1000;
             }
             .back-arrow-btn:hover {
-                background: #00FF33;
-                border-color: #006600;
+                background: #444444;
+                border-color: #1a73e8;
                 box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2);
                 transform: translateX(-2px);
             }
@@ -56,8 +56,7 @@
 
             /* Container chính */
             .settings-container {
-                background: #FFFFE0;
-                color: #000000;
+                background: #252525;
                 padding: 30px;
                 border-radius: 15px;
                 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -80,7 +79,7 @@
                 font-family: 'Roboto', sans-serif;
                 font-size: 2rem;
                 font-weight: 700;
-                color: #000000;
+                color: #ffffff;
                 text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
                 margin: 0;
                 flex-grow: 1;
@@ -102,9 +101,9 @@
                 transition: color 0.3s ease;
             }
             .search-input {
-                background: #CCE6FF;
+                background: #333333;
                 border: 1px solid rgba(255, 255, 255, 0.1);
-                color: #252525;
+                color: #e0e0e0;
                 padding: 10px 15px;
                 border-radius: 20px;
                 font-size: 1rem;
@@ -145,7 +144,7 @@
                 margin: 0;
             }
             .settings-item {
-                background: #FFFFCC;
+                background: #2c2c2c;
                 padding: 15px 20px;
                 margin: 10px 0;
                 border-radius: 10px;
@@ -153,18 +152,18 @@
                 transition: all 0.3s ease;
                 font-size: 1.1rem;
                 font-weight: 500;
-                color: #252525;
+                color: #e0e0e0;
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.05);
                 text-align: left;
             }
             .settings-item:hover {
-                background: #FFFF9C;
+                background: #383838;
                 transform: translateY(-2px);
                 box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
             }
             .settings-item.active {
-                background: #FFFF9C;
+                background: #383838;
                 box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
             }
 
@@ -172,7 +171,7 @@
             .settings-details {
                 display: none;
                 margin-top: 0;
-                background: #FFFFCC;
+                background: #303030;
                 padding: 25px; /* Tăng padding để thoáng hơn */
                 border-radius: 10px;
                 text-align: left;
@@ -200,32 +199,30 @@
             .detail-item {
                 margin: 15px 0; /* Tăng khoảng cách giữa các mục */
                 padding: 10px; /* Thêm padding */
-                background: #FFFFE0; /* Nền từ General Settings */
-                border: 2px solid;
-                border-color: #BFBFBF;
+                background: #2a2a2a; /* Nền từ General Settings */
                 border-radius: 8px; /* Bo góc mềm hơn */
                 transition: background 0.3s ease, transform 0.2s ease;
                 display: flex;
                 align-items: center;
             }
             .detail-item:hover {
-                background: #FFFF9C; /* Hiệu ứng hover sáng hơn */
+                background: #353535; /* Hiệu ứng hover sáng hơn */
                 transform: translateX(5px); /* Dịch nhẹ sang phải khi hover */
             }
             .detail-item label {
                 font-size: 1rem; /* Tăng kích thước chữ */
                 font-weight: 600;
-                color: #252525;
+                color: #e0e0e0;
                 width: 220px; /* Tăng chiều rộng để tránh tràn */
                 flex-shrink: 0;
             }
             .detail-item span, .detail-item input {
                 font-size: 0.95rem; /* Tăng kích thước chữ */
                 padding: 8px 12px; /* Tăng padding */
-                background: #FFF2CC; /* Nền sáng hơn từ General Settings */
+                background: #404040; /* Nền sáng hơn từ General Settings */
                 border: 1px solid rgba(255, 255, 255, 0.15);
                 border-radius: 6px;
-                color: #252525;
+                color: #e0e0e0;
                 width: calc(100% - 230px); /* Điều chỉnh theo label */
                 transition: all 0.3s ease;
             }
@@ -321,29 +318,20 @@
             .done-btn {
                 background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
                 color: #ffffff;
-                padding: 8px 20px;
+                padding: 8px 20px; /* Tăng kích thước nút */
                 border: none;
                 border-radius: 20px;
-                font-size: 0.95rem;
+                font-size: 0.95rem; /* Tăng kích thước chữ */
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.3s ease;
                 margin-top: 15px;
                 display: inline-block;
             }
-
-            .done-btn:not(:disabled):hover {
+            .done-btn:hover {
                 background: linear-gradient(135deg, #1557b0 0%, #1a73e8 100%);
                 transform: translateY(-1px);
                 box-shadow: 0 4px 10px rgba(26, 115, 232, 0.4);
-            }
-
-            .done-btn:disabled {
-                background: #d7dbdd;
-                color: #999;
-                cursor: not-allowed;
-                transform: none;
-                box-shadow: none;
             }
 
             /* Hiệu ứng nháy đỏ - Giữ nguyên */
@@ -410,9 +398,9 @@
                 <!-- Menu bên trái - Giữ nguyên -->
                 <div class="settings-menu">
                     <ul class="settings-list">
-                        <li><div class="settings-item active" data-target="account-info">Account</div></li>
-                        <li><div class="settings-item" data-target="change-password">Change Password</div></li>
-                        <li><div class="settings-item" data-target="general-settings">General Settings</div></li>
+                        <li><div class="settings-item active" data-target="account-info">Tài khoản</div></li>
+                        <li><div class="settings-item" data-target="change-password">Thay đổi mật khẩu</div></li>
+                        <li><div class="settings-item" data-target="general-settings">Cài đặt chung</div></li>
                     </ul>
                 </div>
 
@@ -420,7 +408,7 @@
                 <div class="settings-details-container">
                     <!-- Tài khoản - Áp dụng giao diện từ General Settings -->
                     <div class="settings-details active" id="account-info">
-                        <h3 class="searchable">Account Information</h3>
+                        <h3 class="searchable">Thông tin tài khoản</h3>
                         <div class="detail-item">
                             <label class="searchable">Username:</label>
                             <span class="searchable"><%= session.getAttribute("user") != null ? ((Users) session.getAttribute("user")).getFullname() : "N/A"%></span>
@@ -453,7 +441,7 @@
                     </div>
                     <!-- Thay đổi mật khẩu - Áp dụng giao diện từ General Settings -->
                     <div class="settings-details" id="change-password">
-                        <h3 class="searchable">Change Password</h3>
+                        <h3 class="searchable">Thay đổi mật khẩu</h3>
                         <form id="changePasswordForm" onsubmit="return changePassword(event)">
                             <div class="detail-item">
                                 <label class="searchable">Current Password:</label>
@@ -498,13 +486,13 @@
                             int lateFeePerDay = userDAO.getLateFeePerDay();
                             String notificationInterval = userDAO.getNotificationInterval(rollNumber);
                         %>
-                        <h3 class="searchable">Borrow Status</h3>
+                        <h3 class="searchable">Thời gian mượn sách mặc định</h3>
                         <div class="detail-item">
-                            <label class="searchable">Days Left:</label>
+                            <label class="searchable">Ngày bạn cần phải trả là:</label>
                             <span class="searchable" id="defaultLoanDays"><%= dueDaysDisplay%></span>
                         </div>
                         <div class="detail-item">
-                            <label class="searchable">Extend Days:</label>
+                            <label class="searchable">Gia hạn thêm thời gian mượn:</label>
                             <button onclick="showExtendModal()" class="done-btn searchable" <%= (dueDate == null || isOverdue) ? "disabled" : ""%>>Gia hạn</button>
                         </div>
 
@@ -549,10 +537,10 @@
                     <div class="slide-container">
                         <!-- Slide 1: Nhập số ngày gia hạn -->
                         <div class="slide active" id="extendSlide1">
-                            <h4>Extend days</h4>
+                            <h4>Gia hạn thời gian mượn</h4>
                             <div class="detail-item">
-                                <label>Number of days:</label>
-                                <input type="number" id="extendDays" placeholder="Enter days (10.000 VNĐ/day)" min="1" oninput="checkDaysInput()">
+                                <label>Thời gian bạn cần gia hạn:</label>
+                                <input type="number" id="extendDays" placeholder="Nhập số ngày (10.000 VNĐ/ngày)" min="1" oninput="checkDaysInput()">
                             </div>
                             <div class="button-container">
                                 <button class="back-btn" onclick="closeModal()">Back</button>
